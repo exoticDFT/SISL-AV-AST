@@ -229,6 +229,7 @@ def ast_run1(data, timestep=0.1, verbose=False):
             )
             # Control-based
             apply_ped_control(ped, data['ped'][i][2:4], verbose)
+            display_sensor_noise(ped, data['ped'][i][4:6])
             time.sleep(timestep)
 
         apply_ped_control(ped, [0.0, 0.0], verbose)
@@ -247,6 +248,10 @@ def ast_run1(data, timestep=0.1, verbose=False):
         if ped:
             ped.destroy()
 
+    pass
+
+
+def display_sensor_noise(ped, pos):
     pass
 
 
