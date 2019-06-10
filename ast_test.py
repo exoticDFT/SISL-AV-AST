@@ -99,8 +99,10 @@ def parse_csv(filename, index_column, verbose=False):
     )
 
     if verbose:
-        print(df.head())
-        print(df.keys())
+        print('Parsed dataframe information:')
+        print('-----------------------------')
+        print('First 5 rows (head)\n', df.head())
+        print('Dataframe keys:\n', df.keys())
 
     car = df[[
         'x_car',
@@ -117,16 +119,16 @@ def parse_csv(filename, index_column, verbose=False):
         'noise_y_0'
     ]].to_numpy()
 
-    car = interpolate_data(car, 0.1, 1.0/20.0)
-    ped = interpolate_data(ped, 0.1, 1.0/20.0)
+    car = interpolate_data(car, 0.1, 1.0/20.0, verbose)
+    ped = interpolate_data(ped, 0.1, 1.0/20.0, verbose)
 
     data = {'car': car, 'ped': ped}
 
     if verbose:
-        print(type(data))
-        print(data['car'])
-        print(data['ped'])
-        print(data['car'][0][:2])
+        print('Final data after interpolation')
+        print('------------------------------')
+        print('Car:\n', data['car'])
+        print('Pedestrian:\n', data['ped'])
 
     return data
 
@@ -141,23 +143,37 @@ def interpolate_data(data, orig_step=0.1, new_step=1.0/60.0, verbose=False):
     pos = data[:, 0:2].transpose()
     vel = data[:, 2:4].transpose()
 
+    has_error = data.shape[1] == 6
+
+    if has_error:
+        err = data[:, 4:6].transpose()
+    else:
+        err = np.full(pos.shape, 0.0)
+
     if verbose:
+        print('Input to interpolate')
+        print('--------------------')
         print('Time:\n', len(t), t)
         print('Position:\n', len(pos[0]), pos)
         print('Velocity:\n', len(vel[0]), vel)
+        print('Sensor Noise:\n', len(err[0]), err)
 
     f_pos = interpolate.interp1d(t, pos)
     f_vel = interpolate.interp1d(t, vel)
+    f_err = interpolate.interp1d(t, err)
 
     new_t = np.arange(0.0, stop - 0.1, new_step)
 
     new_pos = f_pos(new_t)
     new_vel = f_vel(new_t)
-    new_data = np.concatenate((new_pos, new_vel))
+    new_err = f_err(new_t)
+    new_data = np.concatenate((new_pos, new_vel, new_err))
 
     if verbose:
+        print('Interpolated data')
+        print('-----------------')
         print('New Time:\n', len(new_t), new_t)
-        print('New Data:', new_data)
+        print('New Data:\n', new_data)
 
     return new_data.transpose()
 
