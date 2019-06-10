@@ -102,3 +102,10 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# VS Code related
+.vscode*
+
+# Repo specific
+output/*
+vehicleInfo.txt
