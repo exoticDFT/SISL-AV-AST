@@ -36,7 +36,7 @@ def create_random_blueprint(blueprints):
 def draw_boundingbox(
     actor,
     life_time=-1.0,
-    color=carla.Color(255, 255, 255),
+    color=carla.Color(255, 0, 0),
     thickness=0.1,
     offset=carla.Location(0.0, 0.0, 0.0)
 ):
