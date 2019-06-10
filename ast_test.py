@@ -112,7 +112,9 @@ def parse_csv(filename, index_column, verbose=False):
         'x_ped_0',
         'y_ped_0',
         'v_x_ped_0',
-        'v_y_ped_0'
+        'v_y_ped_0',
+        'noise_x_0',
+        'noise_y_0'
     ]].to_numpy()
 
     car = interpolate_data(car, 0.1, 1.0/20.0)
@@ -136,8 +138,8 @@ def interpolate_data(data, orig_step=0.1, new_step=1.0/60.0, verbose=False):
         print('Stop:', stop)
 
     t = np.arange(0.0, stop, orig_step)
-    pos = data[:, :2].transpose()
-    vel = data[:, 2:].transpose()
+    pos = data[:, 0:2].transpose()
+    vel = data[:, 2:4].transpose()
 
     if verbose:
         print('Time:\n', len(t), t)
