@@ -229,7 +229,7 @@ def ast_run1(data, timestep=0.1, verbose=False):
             )
             # Control-based
             apply_ped_control(ped, data['ped'][i][2:4], verbose)
-            display_sensor_noise(ped, data['ped'][i][4:6])
+            display_sensor_noise(ped, data['ped'][i][4:6], timestep)
             time.sleep(timestep)
 
         apply_ped_control(ped, [0.0, 0.0], verbose)
@@ -251,8 +251,14 @@ def ast_run1(data, timestep=0.1, verbose=False):
     pass
 
 
-def display_sensor_noise(ped, pos):
-    pass
+def display_sensor_noise(ped, pos, timestep=0.1):
+    util.actor.draw_boundingbox(
+        ped,
+        life_time=timestep,
+        color=carla.Color(255, 255, 255),
+        thickness=0.05,
+        offset=carla.Location(pos[0], pos[1], 0.0)
+    )
 
 
 def apply_ped_control(actor, velocity, verbose=False):
@@ -270,8 +276,7 @@ def apply_ped_control(actor, velocity, verbose=False):
         util.actor.draw_boundingbox(
             actor,
             life_time=0.05,
-            thickness=0.02,
-            offset=carla.Location(0.0, 0.0, -0.2)
+            thickness=0.02
         )
 
     actor.apply_control(control)
@@ -385,7 +390,7 @@ def main():
     )
     carla_world = carla_client.get_world()
 
-    ast_run1(data, 0.05, verbose=False)
+    ast_run1(data, 0.05, verbose=args.verbose)
 
 
 if __name__ == "__main__":
