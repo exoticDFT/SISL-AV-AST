@@ -178,7 +178,7 @@ def interpolate_data(data, orig_step=0.1, new_step=1.0/60.0, verbose=False):
     return new_data.transpose()
 
 
-def ast_run1(data, timestep=0.1):
+def ast_run1(data, timestep=0.1, verbose=False):
     '''
     Loads in the dataframe containing the first example for AST.
     '''
@@ -206,14 +206,14 @@ def ast_run1(data, timestep=0.1):
 
         # Initialize the actors (car and pedestrian)
 
-        pos_c = data['car'][0][:2]
-        car = init_vehicle(pos_c, new_origin, 0.0, verbose=True)
+        pos_c = data['car'][0][0:2]
+        car = init_vehicle(pos_c, new_origin, 0.0, verbose=verbose)
 
-        pos_p = data['ped'][0][:2]
-        ped = init_walker(pos_p, new_origin, 270.0, verbose=True)
+        pos_p = data['ped'][0][0:2]
+        ped = init_walker(pos_p, new_origin, 270.0, verbose=verbose)
 
         # Create pedestrian controller
-        ped_control = create_ped_control(data['ped'][0][2:])
+        ped_control = create_ped_control(data['ped'][0][2:4])
         ped.apply_control(ped_control)
 
         # Move the actors
@@ -223,15 +223,15 @@ def ast_run1(data, timestep=0.1):
             # Direct manipulation
             move_actor(
                 car,
-                data['car'][i][:2],
+                data['car'][i][0:2],
                 new_origin,
-                False
+                verbose
             )
             # Control-based
-            apply_ped_control(ped, data['ped'][i][2:], False)
+            apply_ped_control(ped, data['ped'][i][2:4], verbose)
             time.sleep(timestep)
 
-        apply_ped_control(ped, [0.0, 0.0], False)
+        apply_ped_control(ped, [0.0, 0.0], verbose)
 
         carla_world.tick()
 
@@ -367,7 +367,7 @@ def main():
 
     # First lets read in the csv file
     if args.filename:
-        data = parse_csv(args.filename, 'step', verbose=True)
+        data = parse_csv(args.filename, 'step', verbose=args.verbose)
 
     global carla_client
     global carla_world
@@ -380,7 +380,7 @@ def main():
     )
     carla_world = carla_client.get_world()
 
-    ast_run1(data, 0.05)
+    ast_run1(data, 0.05, verbose=False)
 
 
 if __name__ == "__main__":
