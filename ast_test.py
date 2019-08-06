@@ -204,6 +204,14 @@ def initialize_car_and_ped(data, origin, verbose=False):
     return (car, ped, ped_control)
 
 
+def set_carla_sync_mode(world, timestep=0.1, verbose=False):
+    # Set world to synchronous mode
+    settings = world.get_settings()
+    settings.synchronous_mode = True
+    settings.fixed_delta_seconds = timestep
+    carla_world.apply_settings(settings)
+
+
 def visualize_car_and_ped(data, timestep=0.1, verbose=False):
     '''
     Loads in the dataframe containing the first example for AST.
@@ -222,11 +230,7 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
             origin + camera_offset,
             carla.Rotation(-25.0, 115.0, 0.0)
         )
-        # Set world to synchronous mode
-        settings = carla_world.get_settings()
-        settings.synchronous_mode = True
-        settings.fixed_delta_seconds = timestep
-        carla_world.apply_settings(settings)
+        set_carla_sync_mode(carla_world, timestep, verbose)
 
         carla_world.tick()
 
