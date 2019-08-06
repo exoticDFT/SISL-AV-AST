@@ -162,7 +162,7 @@ def interpolate_data(data, orig_step=0.1, new_step=1.0/60.0, verbose=False):
     f_vel = interpolate.interp1d(t, vel)
     f_err = interpolate.interp1d(t, err)
 
-    new_t = np.arange(0.0, stop - 0.1, new_step)
+    new_t = np.arange(0.0, stop - orig_step, new_step)
 
     new_pos = f_pos(new_t)
     new_vel = f_vel(new_t)
