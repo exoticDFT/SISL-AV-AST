@@ -214,7 +214,6 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
         carla_world.apply_settings(settings)
 
         carla_world.tick()
-        # carla_world.wait_for_tick()
 
         # Initialize the actors (car and pedestrian)
 
@@ -239,6 +238,7 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
                 new_origin,
                 verbose
             )
+
             # Control-based
             apply_ped_control(ped, data['ped'][i][2:4], verbose)
             display_sensor_noise(ped, data['ped'][i][4:], timestep)
@@ -259,8 +259,6 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
             car.destroy()
         if ped:
             ped.destroy()
-
-    pass
 
 
 def display_sensor_noise(ped, pos, timestep=0.1):
@@ -409,11 +407,49 @@ def main():
 
     # First lets read in the csv file
     if args.filename:
-        data = parse_csv(args.filename, 'step', verbose=args.verbose)
+        data = parse_csv(args.filename, 'step', args.verbose)
+        data = interpolate_car_and_ped(data, 1.0, 1.0/60.0, args.verbose)
+        visualize_car_and_ped(data, 1.0/60.0, args.verbose)
+        return
+    else:
+        orig_dt = 0.1
+        new_dt = 1.0/20.0
 
-    data = interpolate_car_and_ped(data, 0.1, 1.0/60.0, args.verbose)
+        # AST 1
+        data = parse_csv(
+            "/home/akoufos/Development/SISL/LincolnLabExample1/sample_trajectory.csv",
+            'step',
+            args.verbose
+        )
+        data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
+        visualize_car_and_ped(data, new_dt, args.verbose)
 
-    visualize_car_and_ped(data, 1.0/60.0, verbose=args.verbose)
+        # AST 2
+        data = parse_csv(
+            "/home/akoufos/Development/SISL/LincolnLabExample1/new_Traj.csv",
+            'step',
+            args.verbose
+        )
+        data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
+        visualize_car_and_ped(data, new_dt, args.verbose)
+
+        # AST 3
+        data = parse_csv(
+            "/home/akoufos/Development/SISL/LincolnLabExample1/no_crash_traj.csv",
+            'step',
+            args.verbose
+        )
+        data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
+        visualize_car_and_ped(data, new_dt, args.verbose)
+
+        # AST 4
+        data = parse_csv(
+            "/home/akoufos/Development/SISL/LincolnLabExample1/ped_fault_traj.csv",
+            'step',
+            args.verbose
+        )
+        data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
+        visualize_car_and_ped(data, new_dt, args.verbose)
 
 
 if __name__ == "__main__":
