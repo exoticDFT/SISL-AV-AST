@@ -212,7 +212,12 @@ def set_carla_sync_mode(world, timestep=0.1, verbose=False):
     carla_world.apply_settings(settings)
 
 
-def visualize_car_and_ped(data, timestep=0.1, verbose=False):
+def visualize_vehicle_and_walker(
+    data,
+    timestep=0.1,
+    with_noise=True,
+    verbose=False
+):
     '''
     Loads in the dataframe containing the first example for AST.
     '''
@@ -254,7 +259,11 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
 
             # Control-based
             apply_ped_control(ped, data['ped'][i][2:4], verbose)
-            display_sensor_noise(ped, data['ped'][i][4:], timestep)
+
+            # Visualize the sensor noise
+            if with_noise:
+                display_sensor_noise(ped, data['ped'][i][4:], timestep)
+
             time.sleep(timestep)
 
         apply_ped_control(ped, [0.0, 0.0], verbose)
@@ -424,7 +433,7 @@ def main():
         new_dt = 1.0/60.0
         data = parse_csv(args.filename, 'step', args.verbose)
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_car_and_ped(data, new_dt, args.verbose)
+        visualize_vehicle_and_walker(data, new_dt, False, args.verbose)
         return
     else:
         orig_dt = 0.1
@@ -437,7 +446,7 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_car_and_ped(data, new_dt, args.verbose)
+        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
 
         # AST 2
         data = parse_csv(
@@ -446,7 +455,7 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_car_and_ped(data, new_dt, args.verbose)
+        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
 
         # AST 3
         data = parse_csv(
@@ -455,7 +464,7 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_car_and_ped(data, new_dt, args.verbose)
+        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
 
         # AST 4
         data = parse_csv(
@@ -464,7 +473,7 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_car_and_ped(data, new_dt, args.verbose)
+        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
 
 
 if __name__ == "__main__":
