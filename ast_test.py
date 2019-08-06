@@ -234,16 +234,11 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
 
         carla_world.tick()
 
-        # Initialize the actors (car and pedestrian)
-        pos_c = data['car'][0][0:2]
-        car = init_vehicle(pos_c, new_origin, 0.0, verbose=verbose)
-
-        pos_p = data['ped'][0][0:2]
-        ped = init_walker(pos_p, new_origin, 270.0, verbose=verbose)
-
-        # Create pedestrian controller
-        ped_control = create_ped_control(data['ped'][0][2:4])
-        ped.apply_control(ped_control)
+        car, ped, ped_control = initialize_car_and_ped(
+            data,
+            new_origin,
+            verbose
+        )
 
         # Move the actors
         for i in range(len(data['car'])):
