@@ -205,10 +205,15 @@ def initialize_car_and_ped(data, origin, verbose=False):
 
 
 def set_carla_sync_mode(world, timestep=0.1, verbose=False):
-    # Set world to synchronous mode
     settings = world.get_settings()
     settings.synchronous_mode = True
     settings.fixed_delta_seconds = timestep
+    carla_world.apply_settings(settings)
+
+
+def unset_carla_sync_mode(world, verbose=False):
+    settings = world.get_settings()
+    settings.synchronous_mode = False
     carla_world.apply_settings(settings)
 
 
@@ -230,20 +235,22 @@ def visualize_vehicle_and_walker(
     camera_offset = carla.Location(0.0, -20.0, 10.0)
 
     try:
+        # Set world to synchronous mode
+        set_carla_sync_mode(carla_world, timestep, verbose)
+
         util.world.move_spectator(
             carla_world,
             origin + camera_offset,
             carla.Rotation(-25.0, 115.0, 0.0)
         )
-        set_carla_sync_mode(carla_world, timestep, verbose)
-
-        carla_world.tick()
 
         car, ped, ped_control = initialize_car_and_ped(
             data,
             new_origin,
             verbose
         )
+
+        carla_world.tick()
 
         # Move the actors
         for i in range(len(data['car'])):
@@ -271,12 +278,12 @@ def visualize_vehicle_and_walker(
         carla_world.tick()
 
         # Set world to non-synchronous mode
-        settings = carla_world.get_settings()
-        settings.synchronous_mode = False
-        carla_world.apply_settings(settings)
-        time.sleep(5.0)
+        unset_carla_sync_mode(carla_world, verbose)
 
     finally:
+        # Wait for a bit before destroying the actors
+        time.sleep(5.0)
+
         if car:
             car.destroy()
         if ped:
