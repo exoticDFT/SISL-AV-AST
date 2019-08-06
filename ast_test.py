@@ -169,6 +169,26 @@ def interpolate_data(data, orig_step=0.1, new_step=1.0/60.0, verbose=False):
     return new_data.transpose()
 
 
+def interpolate_car_and_ped(
+    data,
+    orig_step=0.1,
+    new_step=1.0/60.0,
+    verbose=False
+):
+    car = interpolate_data(data['car'], orig_step, new_step, verbose)
+    ped = interpolate_data(data['ped'], orig_step, new_step, verbose)
+
+    output = {'car': car, 'ped': ped}
+
+    if verbose:
+        print('Final data after interpolation')
+        print('------------------------------')
+        print('Car:\n', data['car'])
+        print('Pedestrian:\n', data['ped'])
+
+    return output
+
+
 def visualize_car_and_ped(data, timestep=0.1, verbose=False):
     '''
     Loads in the dataframe containing the first example for AST.
@@ -211,7 +231,7 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
         # Move the actors
         for i in range(len(data['car'])):
             carla_world.tick()
-            # carla_world.wait_for_tick()
+
             # Direct manipulation
             move_actor(
                 car,
@@ -367,21 +387,6 @@ def move_actor(actor, pos, offest, verbose):
 def main():
     args = parse_arguments()
 
-    # First lets read in the csv file
-    if args.filename:
-        data = parse_csv(args.filename, 'step', verbose=args.verbose)
-
-    car = interpolate_data(data['car'], 0.1, 1.0/60.0, args.verbose)
-    ped = interpolate_data(data['ped'], 0.1, 1.0/60.0, args.verbose)
-
-    data = {'car': car, 'ped': ped}
-
-    if args.verbose:
-        print('Final data after interpolation')
-        print('------------------------------')
-        print('Car:\n', data['car'])
-        print('Pedestrian:\n', data['ped'])
-
     global carla_client
     global carla_world
 
@@ -401,6 +406,12 @@ def main():
             sun_azimuth_angle=130.0,
             sun_altitude_angle=68.0)
     carla_world.set_weather(weather)
+
+    # First lets read in the csv file
+    if args.filename:
+        data = parse_csv(args.filename, 'step', verbose=args.verbose)
+
+    data = interpolate_car_and_ped(data, 0.1, 1.0/60.0, args.verbose)
 
     visualize_car_and_ped(data, 1.0/60.0, verbose=args.verbose)
 
