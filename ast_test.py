@@ -119,18 +119,9 @@ def parse_csv(filename, index_column, verbose=False):
         'noise_y_0'
     ]].to_numpy()
 
-    car = interpolate_data(car, 0.1, 1.0/20.0, verbose)
-    ped = interpolate_data(ped, 0.1, 1.0/20.0, verbose)
+    parsed = {'car': car, 'ped': ped}
 
-    data = {'car': car, 'ped': ped}
-
-    if verbose:
-        print('Final data after interpolation')
-        print('------------------------------')
-        print('Car:\n', data['car'])
-        print('Pedestrian:\n', data['ped'])
-
-    return data
+    return parsed
 
 
 def interpolate_data(data, orig_step=0.1, new_step=1.0/60.0, verbose=False):
@@ -178,7 +169,7 @@ def interpolate_data(data, orig_step=0.1, new_step=1.0/60.0, verbose=False):
     return new_data.transpose()
 
 
-def ast_run1(data, timestep=0.1, verbose=False):
+def visualize_car_and_ped(data, timestep=0.1, verbose=False):
     '''
     Loads in the dataframe containing the first example for AST.
     '''
@@ -199,10 +190,11 @@ def ast_run1(data, timestep=0.1, verbose=False):
         # Set world to synchronous mode
         settings = carla_world.get_settings()
         settings.synchronous_mode = True
+        settings.fixed_delta_seconds = timestep
         carla_world.apply_settings(settings)
 
         carla_world.tick()
-        carla_world.wait_for_tick()
+        # carla_world.wait_for_tick()
 
         # Initialize the actors (car and pedestrian)
 
@@ -219,7 +211,7 @@ def ast_run1(data, timestep=0.1, verbose=False):
         # Move the actors
         for i in range(len(data['car'])):
             carla_world.tick()
-            carla_world.wait_for_tick()
+            # carla_world.wait_for_tick()
             # Direct manipulation
             move_actor(
                 car,
@@ -379,6 +371,17 @@ def main():
     if args.filename:
         data = parse_csv(args.filename, 'step', verbose=args.verbose)
 
+    car = interpolate_data(data['car'], 0.1, 1.0/60.0, args.verbose)
+    ped = interpolate_data(data['ped'], 0.1, 1.0/60.0, args.verbose)
+
+    data = {'car': car, 'ped': ped}
+
+    if args.verbose:
+        print('Final data after interpolation')
+        print('------------------------------')
+        print('Car:\n', data['car'])
+        print('Pedestrian:\n', data['ped'])
+
     global carla_client
     global carla_world
 
@@ -390,7 +393,16 @@ def main():
     )
     carla_world = carla_client.get_world()
 
-    ast_run1(data, 0.05, verbose=args.verbose)
+    weather = carla.WeatherParameters(
+            cloudyness=0.0,
+            precipitation=0.0,
+            precipitation_deposits=0.0,
+            wind_intensity=0.0,
+            sun_azimuth_angle=130.0,
+            sun_altitude_angle=68.0)
+    carla_world.set_weather(weather)
+
+    visualize_car_and_ped(data, 1.0/60.0, verbose=args.verbose)
 
 
 if __name__ == "__main__":
