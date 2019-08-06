@@ -189,6 +189,21 @@ def interpolate_car_and_ped(
     return output
 
 
+def initialize_car_and_ped(data, origin, verbose=False):
+    # Initialize the actors (car and pedestrian)
+    pos_c = data['car'][0][0:2]
+    car = init_vehicle(pos_c, origin, 0.0, verbose=verbose)
+
+    pos_p = data['ped'][0][0:2]
+    ped = init_walker(pos_p, origin, 270.0, verbose=verbose)
+
+    # Create pedestrian controller
+    ped_control = create_ped_control(data['ped'][0][2:4])
+    ped.apply_control(ped_control)
+
+    return (car, ped, ped_control)
+
+
 def visualize_car_and_ped(data, timestep=0.1, verbose=False):
     '''
     Loads in the dataframe containing the first example for AST.
@@ -216,7 +231,6 @@ def visualize_car_and_ped(data, timestep=0.1, verbose=False):
         carla_world.tick()
 
         # Initialize the actors (car and pedestrian)
-
         pos_c = data['car'][0][0:2]
         car = init_vehicle(pos_c, new_origin, 0.0, verbose=verbose)
 
@@ -407,9 +421,11 @@ def main():
 
     # First lets read in the csv file
     if args.filename:
+        orig_dt = 0.25
+        new_dt = 1.0/60.0
         data = parse_csv(args.filename, 'step', args.verbose)
-        data = interpolate_car_and_ped(data, 1.0, 1.0/60.0, args.verbose)
-        visualize_car_and_ped(data, 1.0/60.0, args.verbose)
+        data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
+        visualize_car_and_ped(data, new_dt, args.verbose)
         return
     else:
         orig_dt = 0.1
