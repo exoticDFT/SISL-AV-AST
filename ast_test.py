@@ -23,7 +23,6 @@ import argparse
 import time
 
 # Init global simulation related variables
-carla_client = None
 carla_world = None
 
 
@@ -422,7 +421,6 @@ def move_actor(actor, pos, offest, verbose):
 def main():
     args = parse_arguments()
 
-    global carla_client
     global carla_world
 
     carla_client = util.client.create(
