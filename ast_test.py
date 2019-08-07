@@ -188,7 +188,7 @@ def interpolate_car_and_ped(
     return output
 
 
-def initialize_car_and_ped(data, origin, verbose=False):
+def initialize_vehicle_and_walker(world, data, origin, verbose=False):
     # Initialize the actors (car and pedestrian)
     pos_c = data['car'][0][0:2]
     car = init_vehicle(pos_c, origin, 0.0, verbose=verbose)
@@ -252,7 +252,8 @@ def visualize_vehicle_and_walker(
             carla.Rotation(-25.0, 115.0, 0.0)
         )
 
-        car, ped, ped_control = initialize_car_and_ped(
+        car, ped, ped_control = initialize_vehicle_and_walker(
+            world,
             data,
             new_origin,
             verbose
