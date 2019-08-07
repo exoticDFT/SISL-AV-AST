@@ -225,6 +225,7 @@ def unset_carla_sync_mode(world, verbose=False):
 
 
 def visualize_vehicle_and_walker(
+    world,
     data,
     timestep=0.1,
     with_noise=True,
@@ -243,10 +244,10 @@ def visualize_vehicle_and_walker(
 
     try:
         # Set world to synchronous mode
-        set_carla_sync_mode(carla_world, timestep, verbose)
+        set_carla_sync_mode(world, timestep, verbose)
 
         util.world.move_spectator(
-            carla_world,
+            world,
             origin + camera_offset,
             carla.Rotation(-25.0, 115.0, 0.0)
         )
@@ -257,11 +258,11 @@ def visualize_vehicle_and_walker(
             verbose
         )
 
-        carla_world.tick()
+        world.tick()
 
         # Move the actors
         for i in range(len(data['car'])):
-            carla_world.tick()
+            world.tick()
 
             # Direct manipulation
             move_actor(
@@ -282,10 +283,10 @@ def visualize_vehicle_and_walker(
 
         apply_ped_control(ped, [0.0, 0.0], verbose)
 
-        carla_world.tick()
+        world.tick()
 
         # Set world to non-synchronous mode
-        unset_carla_sync_mode(carla_world, verbose)
+        unset_carla_sync_mode(world, verbose)
 
     finally:
         # Wait for a bit before destroying the actors
@@ -442,12 +443,17 @@ def main():
 
     # First lets read in the csv file
     if args.filename:
-        orig_dt = 0.25
+        orig_dt = 0.1
         new_dt = 1.0/60.0
         data = parse_csv(args.filename, 'step', args.verbose)
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_vehicle_and_walker(data, new_dt, False, args.verbose)
-        return
+        visualize_vehicle_and_walker(
+            carla_world,
+            data,
+            new_dt,
+            False,
+            args.verbose
+        )
     else:
         orig_dt = 0.1
         new_dt = 1.0/20.0
@@ -459,7 +465,13 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
+        visualize_vehicle_and_walker(
+            carla_world,
+            data,
+            new_dt,
+            False,
+            args.verbose
+        )
 
         # AST 2
         data = parse_csv(
@@ -468,7 +480,13 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
+        visualize_vehicle_and_walker(
+            carla_world,
+            data,
+            new_dt,
+            False,
+            args.verbose
+        )
 
         # AST 3
         data = parse_csv(
@@ -477,7 +495,13 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
+        visualize_vehicle_and_walker(
+            carla_world,
+            data,
+            new_dt,
+            False,
+            args.verbose
+        )
 
         # AST 4
         data = parse_csv(
@@ -486,7 +510,13 @@ def main():
             args.verbose
         )
         data = interpolate_car_and_ped(data, orig_dt, new_dt, args.verbose)
-        visualize_vehicle_and_walker(data, new_dt, True, args.verbose)
+        visualize_vehicle_and_walker(
+            carla_world,
+            data,
+            new_dt,
+            False,
+            args.verbose
+        )
 
 
 if __name__ == "__main__":
