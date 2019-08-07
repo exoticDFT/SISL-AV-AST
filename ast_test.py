@@ -194,7 +194,7 @@ def initialize_vehicle_and_walker(world, data, origin, verbose=False):
     car = initialize_vehicle(world, pos_c, origin, 0.0, verbose=verbose)
 
     pos_p = data['ped'][0][0:2]
-    ped = init_walker(pos_p, origin, 270.0, verbose=verbose)
+    ped = initialize_walker(world, pos_p, origin, 270.0, verbose=verbose)
 
     # Create pedestrian controller
     ped_control = create_ped_control(data['ped'][0][2:4])
@@ -376,7 +376,7 @@ def initialize_vehicle(
     return actor
 
 
-def init_walker(pos, offset, heading, verbose=False):
+def initialize_walker(world, pos, offset, heading, verbose=False):
     '''
     Initializes a Carla actor with the provided data and returns the created
     actor.
@@ -388,11 +388,11 @@ def init_walker(pos, offset, heading, verbose=False):
     )
     rotation = carla.Rotation(0.0, heading, 0.0)
 
-    blueprints = carla_world.get_blueprint_library().filter('walker')
+    blueprints = world.get_blueprint_library().filter('walker')
     ped_bp = util.actor.create_random_blueprint(blueprints)
 
     actor = util.actor.initialize(
-        carla_world,
+        world,
         ped_bp,
         position,
         rotation,
