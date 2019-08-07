@@ -208,13 +208,21 @@ def set_carla_sync_mode(world, timestep=0.1, verbose=False):
     settings = world.get_settings()
     settings.synchronous_mode = True
     settings.fixed_delta_seconds = timestep
-    carla_world.apply_settings(settings)
+
+    if verbose:
+        print('Carla synchronous mode: ON')
+
+    world.apply_settings(settings)
 
 
 def unset_carla_sync_mode(world, verbose=False):
     settings = world.get_settings()
     settings.synchronous_mode = False
-    carla_world.apply_settings(settings)
+
+    if verbose:
+        print('Carla synchronous mode: ON')
+
+    world.apply_settings(settings)
 
 
 def visualize_vehicle_and_walker(
