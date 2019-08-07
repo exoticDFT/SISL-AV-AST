@@ -191,7 +191,7 @@ def interpolate_car_and_ped(
 def initialize_vehicle_and_walker(world, data, origin, verbose=False):
     # Initialize the actors (car and pedestrian)
     pos_c = data['car'][0][0:2]
-    car = init_vehicle(pos_c, origin, 0.0, verbose=verbose)
+    car = initialize_vehicle(world, pos_c, origin, 0.0, verbose=verbose)
 
     pos_p = data['ped'][0][0:2]
     ped = init_walker(pos_p, origin, 270.0, verbose=verbose)
@@ -337,7 +337,14 @@ def create_ped_control(velocity):
     return control
 
 
-def init_vehicle(pos, offset, heading, model='lincoln', verbose=False):
+def initialize_vehicle(
+    world,
+    pos,
+    offset,
+    heading,
+    model='lincoln',
+    verbose=False
+):
     '''
     Initializes a Carla actor with the provided data and returns the created
     actor.
@@ -349,14 +356,14 @@ def init_vehicle(pos, offset, heading, model='lincoln', verbose=False):
     )
     rotation = carla.Rotation(0.0, heading, 0.0)
 
-    blueprints = carla_world.get_blueprint_library().filter(
+    blueprints = world.get_blueprint_library().filter(
         'vehicle.' + model + '.*'
     )
 
     bp = util.actor.create_random_blueprint(blueprints)
 
     actor = util.actor.initialize(
-        carla_world,
+        world,
         bp,
         position,
         rotation,
