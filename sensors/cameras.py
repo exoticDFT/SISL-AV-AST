@@ -4,9 +4,9 @@ import enum
 
 
 class SensorTypeEnum(enum.Enum):
-    DEPTH = enum.auto()
-    RGB = enum.auto()
-    SEGMENTATION = enum.auto()
+    DEPTH = 0
+    RGB = 1
+    SEGMENTATION = 2
 
     @classmethod
     def print_options(self):
@@ -39,7 +39,6 @@ def create_blueprint_depth(world, height, width, fov, capture_rate):
     blueprint = world.get_blueprint_library().find('sensor.camera.depth')
 
     set_blueprint_attribute(blueprint, height, width, fov, capture_rate)
-    # blueprint.set_attribute('convert', 'Depth')
 
     return blueprint
 
@@ -101,7 +100,6 @@ def create_blueprint_segmentation(world, height, width, fov, capture_rate):
     )
 
     set_blueprint_attribute(blueprint, height, width, fov, capture_rate)
-    # blueprint.set_attribute('post_processing', 'SemanticSegmentation')
 
     return blueprint
 
@@ -119,7 +117,8 @@ def create_camera(
     )
 ):
     '''
-    Creates a Carla camera that can be used indepently or attached to an actor.
+    Creates a Carla camera that can be used independently or attached to an
+    actor.
 
     Parameters
     ----------
