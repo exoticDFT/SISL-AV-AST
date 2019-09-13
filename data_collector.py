@@ -37,6 +37,8 @@ try:
 except ImportError:
     import Queue as queue
 
+import util.client
+
 
 class CarlaSyncMode(object):
     """
@@ -122,6 +124,14 @@ def handle_events():
                 return "Auto"
 
 
+def generate_scenario(world):
+    dynamic = []
+    static = []
+
+    for actor in static:
+        actor.set_simulate_physics(False)
+
+
 def main():
     actor_list = []
     pygame.init()
@@ -136,10 +146,18 @@ def main():
     font = get_font()
     clock = pygame.time.Clock()
 
-    client = carla.Client('localhost', 2000)
-    client.set_timeout(2.0)
+    client = util.client.create('localhost', 2000, 2.0)
 
-    world = client.get_world()
+    world = client.load_world('Town05')
+
+    weather = carla.WeatherParameters(
+            cloudyness=0.0,
+            precipitation=0.0,
+            precipitation_deposits=0.0,
+            wind_intensity=0.0,
+            sun_azimuth_angle=130.0,
+            sun_altitude_angle=68.0)
+    world.set_weather(weather)
 
     try:
         m = world.get_map()
@@ -245,6 +263,15 @@ def main():
                         (255, 255, 255)
                     ),
                     (8, 28)
+                )
+                location = vehicle.get_location()
+                display.blit(
+                    font.render(
+                        'Location: ({}, {})'.format(location.x, location.y),
+                        True,
+                        (255, 255, 255)
+                    ),
+                    (8, 46)
                 )
                 pygame.display.flip()
 
