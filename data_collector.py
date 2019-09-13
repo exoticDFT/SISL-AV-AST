@@ -6,6 +6,11 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+import util.client
+import util.common
+import util.world
+import sensors.cameras
+
 import glob
 import os
 import sys
@@ -36,9 +41,6 @@ try:
     import queue
 except ImportError:
     import Queue as queue
-
-import util.client
-import sensors.cameras
 
 
 class CarlaSyncMode(object):
@@ -125,12 +127,75 @@ def handle_events():
                 return "Auto"
 
 
-def generate_scenario(world):
+def generate_scenario(world, actors):
+    blueprints = world.get_blueprint_library().filter('vehicle.*')
     dynamic = []
     static = []
 
-    for actor in static:
-        actor.set_simulate_physics(False)
+    static_transforms = [
+        carla.Transform(
+            carla.Location(155.6, 102.9, 0.3),
+            carla.Rotation(yaw=-73.0)
+        ),
+        carla.Transform(
+            carla.Location(98.5, 145.3, 0.3),
+            carla.Rotation(yaw=-14.0)
+        ),
+        carla.Transform(
+            carla.Location(158.2, 80.0, 0.3),
+            carla.Rotation(yaw=-90.0)
+        ),
+        carla.Transform(
+            carla.Location(158.2, 50.0, 0.3),
+            carla.Rotation(yaw=-90.0)
+        ),
+        carla.Transform(
+            carla.Location(158.2, 30.0, 0.3),
+            carla.Rotation(yaw=-90.0)
+        ),
+        carla.Transform(
+            carla.Location(148.5, 90.0, 0.3),
+            carla.Rotation(yaw=90.0)
+        ),
+        carla.Transform(
+            carla.Location(148.5, 60.0, 0.3),
+            carla.Rotation(yaw=90.0)
+        ),
+        carla.Transform(
+            carla.Location(148.5, 40.0, 0.3),
+            carla.Rotation(yaw=90.0)
+        )
+    ]
+
+    town = world.get_map()
+    spawn_points = town.get_spawn_points()
+
+    dynamic_transforms = [
+        spawn_points[152],
+        spawn_points[152],
+        spawn_points[300],
+        spawn_points[152],
+        spawn_points[300],
+        spawn_points[300],
+        spawn_points[300],
+        spawn_points[152]
+    ]
+
+    for trans in static_transforms:
+        actor = util.world.spawn_actor(world, blueprints, trans)
+
+        if actor:
+            static.append(actor)
+            actor.set_autopilot(False)
+
+    for trans in dynamic_transforms:
+        actor = util.world.spawn_actor(world, blueprints, trans)
+        util.common.sleep_random_time(3.0, 6.0)
+
+        if actor:
+            dynamic.append(actor)
+
+    actors = actors + static + dynamic
 
 
 def main():
@@ -147,9 +212,10 @@ def main():
     font = get_font()
     clock = pygame.time.Clock()
 
-    client = util.client.create('localhost', 2000, 2.0)
+    client = util.client.create('localhost', 2000, 2.0, 'Town05', True)
 
-    world = client.load_world('Town05')
+    world = client.get_world()
+    util.world.move_spectator(world)
 
     weather = carla.WeatherParameters(
             cloudyness=0.0,
@@ -165,11 +231,17 @@ def main():
         start_pose = m.get_spawn_points()[152]
         waypoint = m.get_waypoint(start_pose.location)
 
-        blueprint_library = world.get_blueprint_library()
+        blueprint_library = world.get_blueprint_library().filter(
+            'vehicle.toyota.*'
+        )
 
-        vehicle = world.spawn_actor(
-            random.choice(blueprint_library.filter('vehicle.*')),
-            start_pose)
+        generate_scenario(world, actor_list)
+
+        vehicle = util.world.spawn_actor(
+            world,
+            blueprint_library,
+            start_pose
+        )
         actor_list.append(vehicle)
 
         bb = vehicle.bounding_box.extent
@@ -265,7 +337,9 @@ def main():
                     ),
                     (8, 28)
                 )
-                location = vehicle.get_location()
+                transform = vehicle.get_transform()
+                location = transform.location
+                rotation = transform.rotation
                 display.blit(
                     font.render(
                         'Location: ({}, {})'.format(location.x, location.y),
@@ -273,6 +347,14 @@ def main():
                         (255, 255, 255)
                     ),
                     (8, 46)
+                )
+                display.blit(
+                    font.render(
+                        'Yaw: {} deg'.format(rotation.yaw),
+                        True,
+                        (255, 255, 255)
+                    ),
+                    (8, 64)
                 )
                 pygame.display.flip()
 
