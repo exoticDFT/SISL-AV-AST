@@ -38,6 +38,7 @@ except ImportError:
     import Queue as queue
 
 import util.client
+import sensors.cameras
 
 
 class CarlaSyncMode(object):
@@ -178,36 +179,36 @@ def main():
             carla.Rotation(pitch=0.0)
         )
 
-        rgb_bp = blueprint_library.find('sensor.camera.rgb')
-        rgb_bp.set_attribute('image_size_x', '1600')
-        rgb_bp.set_attribute('image_size_y', '900')
-        rgb_bp.set_attribute('fov', '70')
-        camera_rgb = world.spawn_actor(
-            rgb_bp,
-            cam_transform,
-            attach_to=vehicle
+        camera_rgb = sensors.cameras.create_camera(
+            vehicle,
+            sensor_type=sensors.cameras.SensorTypeEnum.RGB,
+            height=900,
+            width=1600,
+            fov=70,
+            capture_rate=12,
+            transform=cam_transform
         )
         actor_list.append(camera_rgb)
 
-        dep_bp = blueprint_library.find('sensor.camera.depth')
-        dep_bp.set_attribute('image_size_x', '1600')
-        dep_bp.set_attribute('image_size_y', '900')
-        dep_bp.set_attribute('fov', '70')
-        camera_depth = world.spawn_actor(
-            dep_bp,
-            cam_transform,
-            attach_to=vehicle
+        camera_depth = sensors.cameras.create_camera(
+            vehicle,
+            sensor_type=sensors.cameras.SensorTypeEnum.DEPTH,
+            height=900,
+            width=1600,
+            fov=70,
+            capture_rate=12,
+            transform=cam_transform
         )
         actor_list.append(camera_depth)
 
-        seg_bp = blueprint_library.find('sensor.camera.semantic_segmentation')
-        seg_bp.set_attribute('image_size_x', '1600')
-        seg_bp.set_attribute('image_size_y', '900')
-        seg_bp.set_attribute('fov', '70')
-        camera_semseg = world.spawn_actor(
-            seg_bp,
-            cam_transform,
-            attach_to=vehicle
+        camera_semseg = sensors.cameras.create_camera(
+            vehicle,
+            sensor_type=sensors.cameras.SensorTypeEnum.SEGMENTATION,
+            height=900,
+            width=1600,
+            fov=70,
+            capture_rate=12,
+            transform=cam_transform
         )
         actor_list.append(camera_semseg)
 
