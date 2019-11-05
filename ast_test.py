@@ -188,10 +188,12 @@ def interpolate_car_and_ped(
 def initialize_vehicle_and_walker(world, data, origin, verbose=False):
     # Initialize the actors (car and pedestrian)
     pos_c = data['car'][0][0:2]
-    car = initialize_vehicle(world, pos_c, origin, 0.0, verbose=verbose)
+    car_head = np.arctan2(-data['car'][0][3], data['car'][0][2])*180.0/np.pi
+    car = initialize_vehicle(world, pos_c, origin, car_head, verbose=verbose)
 
     pos_p = data['ped'][0][0:2]
-    ped = initialize_walker(world, pos_p, origin, 270.0, verbose=verbose)
+    ped_head = np.arctan2(-data['ped'][0][3], data['ped'][0][2])*180.0/np.pi
+    ped = initialize_walker(world, pos_p, origin, ped_head, verbose=verbose)
 
     # Create pedestrian controller
     ped_control = create_ped_control(data['ped'][0][2:4])
@@ -235,13 +237,16 @@ def visualize_vehicle_and_walker(
     ped = None
 
     # Location of origin for this project
-    new_origin = np.array([156.0, 110.0])
+    new_origin = np.array([156.0, 110.0, 0.0])
     origin = carla.Vector3D(156.0, 110.0, 0.0)
     camera_offset = carla.Location(0.0, -20.0, 10.0)
 
     try:
         # Set world to synchronous mode
         set_carla_sync_mode(world, timestep, verbose)
+        for actor in world.get_actors():
+            if any(sub in actor.type_id for sub in ['walker', 'vehicle']):
+                actor.destroy()
 
         util.world.move_spectator(
             world,
@@ -258,15 +263,25 @@ def visualize_vehicle_and_walker(
 
         world.tick()
 
+        # print('Initial locations:')
+        # print('   Car:', car.get_transform().location - origin)
+        # print('   Ped:', ped.get_transform().location - origin)
+
         # Move the actors
         for i in range(len(data['car'])):
-            world.tick()
-
             # Direct manipulation
             move_actor(
                 car,
                 data['car'][i][0:2],
-                new_origin,
+                new_origin + [0, 0, 0.25],
+                data['car'][i][2:4],
+                verbose
+            )
+            move_actor(
+                ped,
+                data['ped'][i][0:2],
+                new_origin + [0, 0, 1.3],
+                data['ped'][i][2:4],
                 verbose
             )
 
@@ -277,16 +292,22 @@ def visualize_vehicle_and_walker(
             if with_noise:
                 display_sensor_noise(ped, data['ped'][i][4:], timestep)
 
-            time.sleep(timestep)
+            # print('   Ped:', ped.get_transform().location - origin)
+            # print('   Vel:', data['ped'][i][2:4])
+            world.tick()
 
         apply_ped_control(ped, [0.0, 0.0], verbose)
 
         world.tick()
 
+        print('Final locations:')
+        print('   Car:', car.get_transform().location - origin)
+        print('   Ped:', ped.get_transform().location - origin)
+
+    finally:
         # Set world to non-synchronous mode
         unset_carla_sync_mode(world, verbose)
 
-    finally:
         # Wait for a bit before destroying the actors
         time.sleep(5.0)
 
@@ -385,7 +406,7 @@ def initialize_walker(world, pos, offset, heading, verbose=False):
     )
     rotation = carla.Rotation(0.0, heading, 0.0)
 
-    blueprints = world.get_blueprint_library().filter('walker')
+    blueprints = world.get_blueprint_library().filter('walker.pedestrian.0002')
     ped_bp = util.actor.create_random_blueprint(blueprints)
 
     actor = util.actor.initialize(
@@ -402,17 +423,20 @@ def initialize_walker(world, pos, offset, heading, verbose=False):
     return actor
 
 
-def move_actor(actor, pos, offest, verbose):
+def move_actor(actor, pos, offset, vel, verbose):
     '''
     Moves a given Carla actor according to the provided data and timestep.
     '''
     if actor:
         position = carla.Vector3D(
-            pos[0] + offest[0],
-            -pos[1] + offest[1],
-            0.25
+            pos[0] + offset[0],
+            -pos[1] + offset[1],
+            offset[2]
         )
-        actor.set_location(position)
+        heading = np.arctan2(-vel[1], vel[0])*180.0/np.pi
+        rotation = carla.Rotation(yaw=heading)
+        transform = carla.Transform(position, rotation)
+        actor.set_transform(transform)
 
         if verbose:
             util.actor.print_info(actor)
