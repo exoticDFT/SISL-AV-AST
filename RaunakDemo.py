@@ -167,7 +167,65 @@ def visualize_vehicles(
             car1.destroy()
         if car2:
             car2.destroy()
+        if car3:
+            car3.destroy()
 
+def place_vehicles(world,data,origin,color='',verbose=False):
+    print("place_vehicles has been called")
+    num_veh = int(data.shape[1]/2)
+    car_list = []
+    for i in range(num_veh):
+        pos = data[0][i*2:(i+1)*2]
+        car_list.append(ast.initialize_vehicle(world,pos,origin,0.0,'toyota',color,verbose))
+
+    return car_list
+
+def move_vehicles(world,data,timestep=0.1,color='',verbose=False):
+    '''
+    Loads in the dataframe containing the first example for AST.
+    '''
+    print("move_vehicles has been called")
+    # Location of origin for this project
+    new_origin = np.array([-180.0, 110.0, 0.0])
+    origin = carla.Vector3D(80.0, 110.0, 0.0)
+    camera_offset = carla.Location(0.0, -20.0, 20.0)
+
+    try:
+        util.world.move_spectator(
+            world,
+            origin + camera_offset,
+            carla.Rotation(-25.0, 115.0, 0.0)
+        )
+
+        car_list = place_vehicles(world, data, new_origin, color, verbose)
+
+        # Set world to synchronous mode
+        ast.set_carla_sync_mode(world, timestep, verbose)
+        world.tick()
+
+        # Move the actors
+        for i in range(len(data)):
+            print("iteration = ",i)
+            world.tick()
+
+            for j in range(len(car_list)):
+                car = car_list[j]
+                move_actor(car,data[i][(j)*2:(j+1)*2],new_origin+[0.0,0.0,0.5],verbose)
+
+            time.sleep(timestep)
+
+        world.tick()
+
+        # Set world to non-synchronous mode
+        ast.unset_carla_sync_mode(world, verbose)
+
+    finally:
+        # Wait for a bit before destroying the actors
+        time.sleep(2.0)
+
+        for k in range(len(car_list)):
+            car2destroy = car_list[k]
+            car2destroy.destroy()
 
 def main():
     args = parse_arguments()
@@ -193,7 +251,7 @@ def main():
 
     data = np.loadtxt(os.path.join(data_directory, 'ground_truth.csv'),delimiter=',')
     data_imitation = np.loadtxt(os.path.join(data_directory, 'imitation.csv'),delimiter=',')
-    visualize_vehicles(carla_world,data,0.02,'23,51,243',args.verbose)
+    move_vehicles(carla_world,data,0.02,'23,51,243',args.verbose)
 
 
 if __name__ == "__main__":
