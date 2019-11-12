@@ -361,6 +361,7 @@ def initialize_vehicle(
     offset,
     heading,
     model='lincoln',
+    color='',
     verbose=False
 ):
     '''
@@ -378,7 +379,7 @@ def initialize_vehicle(
         'vehicle.' + model + '.*'
     )
 
-    bp = util.actor.create_random_blueprint(blueprints)
+    bp = util.actor.create_random_blueprint(blueprints,color)
 
     actor = util.actor.initialize(
         world,
