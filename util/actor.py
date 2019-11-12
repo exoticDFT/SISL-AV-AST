@@ -5,7 +5,10 @@ import random
 import time
 
 
-def create_random_blueprint(blueprints):
+def create_random_blueprint(
+    blueprints: carla.BlueprintLibrary,
+    color: str = ''
+):
     '''
     Creates a random Carla actor blueprint based on some provided blueprint
     library.
@@ -14,6 +17,9 @@ def create_random_blueprint(blueprints):
     ----------
     blueprints : carla.BlueprintLibrary
         A set of Carla blueprint templates used for creating a blueprint.
+    color : string, default is empty string
+        RGB string used for determining the vehicle's color, order and format
+        is 'R, G, B'
 
     Returns
     -------
@@ -23,9 +29,11 @@ def create_random_blueprint(blueprints):
     blueprint = random.choice(blueprints)
 
     if blueprint.has_attribute('color'):
-        color = random.choice(
-            blueprint.get_attribute('color').recommended_values
-        )
+        if color == '':
+            color = random.choice(
+                blueprint.get_attribute('color').recommended_values
+            )
+
         blueprint.set_attribute('color', color)
 
     blueprint.set_attribute('role_name', 'autopilot')
