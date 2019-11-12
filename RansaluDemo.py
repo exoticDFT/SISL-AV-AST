@@ -95,7 +95,7 @@ def visualize_vehicles(
     car2 = None
 
     # Location of origin for this project
-    new_origin = np.array([156.0, 110.0])
+    new_origin = np.array([156.0, 110.0, 0.0])
     origin = carla.Vector3D(156.0, 110.0, 0.0)
     camera_offset = carla.Location(0.0, -20.0, 10.0)
 
@@ -120,13 +120,15 @@ def visualize_vehicles(
             ast.move_actor(
                 car1,
                 data['car'][i][0:2],
-                new_origin,
+                new_origin + [0.0, 0.0, 0.5],
+                data['car'][i][2:4],
                 verbose
             )
             ast.move_actor(
                 car2,
                 data['ped'][i][0:2],
-                new_origin,
+                new_origin + [0.0, 0.0, 0.5],
+                data['ped'][i][2:4],
                 verbose
             )
 
