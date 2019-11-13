@@ -368,10 +368,51 @@ def initialize_vehicle(
     Initializes a Carla actor with the provided data and returns the created
     actor.
     '''
+    print("ast says: initialize_vehicle has been called")
     position = carla.Vector3D(
         pos[0] + offset[0],
         -pos[1] + offset[1],
         0.5
+    )
+    rotation = carla.Rotation(0.0, heading, 0.0)
+
+    blueprints = world.get_blueprint_library().filter(
+        'vehicle.' + model + '.*'
+    )
+
+    bp = util.actor.create_random_blueprint(blueprints,color)
+
+    actor = util.actor.initialize(
+        world,
+        bp,
+        position,
+        rotation,
+        verbose=verbose
+    )
+
+    if actor:
+        actor.set_simulate_physics(False)
+
+    return actor
+
+def initialize_vehicle_higher(
+    world,
+    pos,
+    offset,
+    heading,
+    model='lincoln',
+    color='',
+    verbose=False
+):
+    '''
+    Initializes a Carla actor with the provided data and returns the created
+    actor. Written to start imitation vehicles higher in the sky to avoid spawn overlap
+    '''
+    print("ast says: initialize_vehicle_higher has been called")
+    position = carla.Vector3D(
+        pos[0] + offset[0],
+        -pos[1] + offset[1],
+        10.0
     )
     rotation = carla.Rotation(0.0, heading, 0.0)
 

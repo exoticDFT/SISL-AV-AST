@@ -69,24 +69,6 @@ def parse_arguments():
 
     return args
 
-
-def initialize_three_cars(world, data, origin, color='',verbose=False):
-    # Initialize the actors (two independent cars)
-    pos_1 = data[0][0:2]
-    print("Initialize 3 cars says: pos1 = ",pos_1)
-    car1 = ast.initialize_vehicle(world, pos_1, origin, 0.0, 'toyota', color, verbose)
-
-    pos_2 = data[0][2:4]
-    car2 = ast.initialize_vehicle(world, pos_2, origin, 0.0, 'toyota', color, verbose)
-    print("Initialize 3 cars says: pos2 = ",pos_2)
-
-    pos_3 = data[0][4:6]
-    car3 = ast.initialize_vehicle(world, pos_3, origin, 0.0, 'toyota', color, verbose)
-    print("Initialize 3 cars says: pos3 = ",pos_3)
-
-    return (car1, car2, car3)
-
-
 def move_actor(actor, pos, offset, verbose):
     '''
     Moves a given Carla actor according to the provided data and timestep.
@@ -110,66 +92,6 @@ def move_actor(actor, pos, offset, verbose):
                 offset=carla.Location(0.0, 0.0, -0.2)
             )
 
-
-def visualize_vehicles(
-    world,
-    data,
-    timestep=0.1,
-    color='',
-    verbose=False
-):
-    '''
-    Loads in the dataframe containing the first example for AST.
-    '''
-    car1 = None
-    car2 = None
-
-    # Location of origin for this project
-    new_origin = np.array([-180.0, 110.0, 0.0])
-    origin = carla.Vector3D(80.0, 110.0, 0.0)
-    camera_offset = carla.Location(0.0, -20.0, 20.0)
-
-    try:
-        util.world.move_spectator(
-            world,
-            origin + camera_offset,
-            carla.Rotation(-25.0, 115.0, 0.0)
-        )
-
-        car1, car2, car3 = initialize_three_cars(world, data, new_origin, color, verbose)
-
-        # Set world to synchronous mode
-        ast.set_carla_sync_mode(world, timestep, verbose)
-        world.tick()
-
-        # Move the actors
-        for i in range(len(data)):
-            print("iteration = ",i)
-            world.tick()
-
-            # Direct manipulation
-            move_actor(car1,data[i][0:2],new_origin + [0.0, 0.0, 0.5],verbose)
-            move_actor(car2,data[i][2:4],new_origin + [0.0, 0.0, 0.5],verbose)
-            move_actor(car3,data[i][4:6],new_origin + [0.0, 0.0, 0.5],verbose)
-
-            time.sleep(timestep)
-
-        world.tick()
-
-        # Set world to non-synchronous mode
-        ast.unset_carla_sync_mode(world, verbose)
-
-    finally:
-        # Wait for a bit before destroying the actors
-        time.sleep(2.0)
-
-        if car1:
-            car1.destroy()
-        if car2:
-            car2.destroy()
-        if car3:
-            car3.destroy()
-
 def place_vehicles(world,data,origin,color='',verbose=False):
     print("place_vehicles has been called")
     num_veh = int(data.shape[1]/2)
@@ -180,9 +102,19 @@ def place_vehicles(world,data,origin,color='',verbose=False):
 
     return car_list
 
+def place_vehicles_higher(world,data,origin,color='',verbose=False):
+    print("place_vehicles_higher has been called")
+    num_veh = int(data.shape[1]/2)
+    car_list = []
+    for i in range(num_veh):
+        pos = data[0][i*2:(i+1)*2]
+        car_list.append(ast.initialize_vehicle_higher(world,pos,origin,0.0,'toyota',color,verbose))
+
+    return car_list
+
 def move_vehicles(world,data,timestep=0.1,color='',verbose=False):
     '''
-    Loads in the dataframe containing the first example for AST.
+    Move vehicels according to provided trajectory in data.
     '''
     print("move_vehicles has been called")
     # Location of origin for this project
@@ -227,6 +159,59 @@ def move_vehicles(world,data,timestep=0.1,color='',verbose=False):
             car2destroy = car_list[k]
             car2destroy.destroy()
 
+def move_vehicles_true_imit(world,data_true,data_imit,timestep=0.1,color_true='',color_imit='',verbose=False):
+    '''
+    Move ground truth and imitated vehicles according to data_true and data_imit.
+    '''
+    print("move_vehicles_true_imit has been called")
+    # Location of origin for this project
+    new_origin = np.array([-180.0, 108.0, 0.0])
+    origin = carla.Vector3D(80.0, 110.0, 0.0)
+    camera_offset = carla.Location(0.0, -20.0, 20.0)
+
+    try:
+        util.world.move_spectator(
+            world,
+            origin + camera_offset,
+            carla.Rotation(-25.0, 115.0, 0.0)
+        )
+
+        car_list_true = place_vehicles(world, data_true, new_origin, color_true, verbose)
+        car_list_imit = place_vehicles_higher(world, data_imit, new_origin, color_imit, verbose)
+
+        # Set world to synchronous mode
+        ast.set_carla_sync_mode(world, timestep, verbose)
+        world.tick()
+
+        # Move the actors
+        for i in range(len(data_true)):
+            print("iteration = ",i)
+            world.tick()
+
+            for j in range(len(car_list_true)):
+                car_true = car_list_true[j]
+                move_actor(car_true,data_true[i][(j)*2:(j+1)*2],new_origin+[0.0,0.0,0.5],verbose)
+
+                car_imit = car_list_imit[j]
+                move_actor(car_imit,data_imit[i][(j)*2:(j+1)*2],new_origin+[0.0,0.0,0.5],verbose)
+
+            time.sleep(timestep)
+
+        world.tick()
+
+        # Set world to non-synchronous mode
+        ast.unset_carla_sync_mode(world, verbose)
+
+    finally:
+        # Wait for a bit before destroying the actors
+        time.sleep(2.0)
+
+        for k in range(len(car_list_true)):
+            car2destroy = car_list_true[k]
+            car2destroy_imit = car_list_imit[k]
+            car2destroy.destroy()
+            car2destroy_imit.destroy()
+
 def main():
     args = parse_arguments()
 
@@ -249,9 +234,10 @@ def main():
 
     data_directory = '/scratch/SISL-AV-AST'
 
-    data = np.loadtxt(os.path.join(data_directory, 'ground_truth.csv'),delimiter=',')
-    data_imitation = np.loadtxt(os.path.join(data_directory, 'imitation.csv'),delimiter=',')
-    move_vehicles(carla_world,data,0.02,'23,51,243',args.verbose)
+    data_true = np.loadtxt(os.path.join(data_directory, 'ground_truth.csv'),delimiter=',')
+    data_imit = np.loadtxt(os.path.join(data_directory, 'imitation.csv'),delimiter=',')
+    #move_vehicles(carla_world,data_imit,0.02,'255,255,255',args.verbose)
+    move_vehicles_true_imit(carla_world,data_true,data_imit,0.02,'255,255,255','23,51,243',args.verbose)
 
 
 if __name__ == "__main__":
