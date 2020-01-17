@@ -390,8 +390,9 @@ def initialize_vehicle(
         verbose=verbose
     )
 
+    #TODO: Change back to false for using as visualizer
     if actor:
-        actor.set_simulate_physics(False)
+        actor.set_simulate_physics(True)
 
     return actor
 

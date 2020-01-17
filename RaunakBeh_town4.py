@@ -64,33 +64,31 @@ def move_vehicles(world,color,verbose=False):
     '''
     print("beh agent move called")
     # Location of origin for this project
-    new_origin = np.array([156.0, 110.0, 0.0])
-    origin = carla.Vector3D(156.0, 110.0, 0.0)
-    camera_offset = carla.Location(0.0, -20.0, 20.0)
-
+    new_origin = np.array([100.0, 110.0, 0.0])
+    origin = carla.Vector3D(100.0, 110.0, 0.0)
+    camera_offset = carla.Location(0.0, -20.0, 120.0)
+    myblueprint = world.get_blueprint_library().filter("vehicle.toyota.*")[0]
     car = None
     car2 = None
     car3 = None
 
     try:
-        util.world.move_spectator(
-            world,
-            origin + camera_offset,
-            carla.Rotation(-25.0, 115.0, 0.0)
-        )
+        #util.world.move_spectator(world,origin + camera_offset,carla.Rotation(-25.0, 115.0, 0.0))
+
         spawnpoints = world.get_map().get_spawn_points()
+
+        util.world.move_spectator(world,spawnpoints[299].location+carla.Location(0.0,0.0,50.0),carla.Rotation(0.0,0.0,0.0))
         # TODO: randomize spawnpoints
 
 #        for waypoint in spawnpoints:
 #            print(waypoint.location)
 
         # To visualize spawnpoints
-        for waypoint in spawnpoints:
-            world.debug.draw_string(waypoint.location,'o',draw_shadow=False,color=carla.Color(r=255, g=255, b=255), life_time=2.0,persistent_lines=True)
-        time.sleep(2.0)
+        util.world.draw_spawn_points(world,timeout=20.0)
 
-        pos = [-20.,0.]
-        car = ast.initialize_vehicle(world,pos,new_origin,0.0,'toyota',color,verbose)
+        #pos = [-20.,0.]
+        #car = ast.initialize_vehicle(world,pos,new_origin,0.0,'toyota',color,verbose)
+        car = util.actor.initialize(world,myblueprint,transform=spawnpoints[299],verbose=False)
         agent = BehaviorAgent(car,behavior='aggressive')
         dest_wp_1 = spawnpoints[2].location
         print("dest for car 1 and car2 is",dest_wp_1)
@@ -98,20 +96,24 @@ def move_vehicles(world,color,verbose=False):
         #waypoints = [i[0] for i in agent.get_local_planner().waypoints_queue]
         #misc.draw_waypoints(car.get_world(),waypoints,timeout=60.0) #disp waypoints for 60 sec
         time.sleep(1.0)
-        pos2 = [-30.,0.]
-        car2 = ast.initialize_vehicle(world,pos2,new_origin,0.0,'toyota',color,verbose)        
+
+#        pos2 = [-30.,0.]
+#        car2 = ast.initialize_vehicle(world,pos2,new_origin,0.0,'toyota',color,verbose)  
+        car2 = util.actor.initialize(world,myblueprint,transform=spawnpoints[303],verbose=False)
         agent2 = BehaviorAgent(car2,behavior='aggressive')
         agent2.set_destination(car2.get_location(),dest_wp_1,clean=True)
-
         time.sleep(1.0)
-        pos3 = [-20.,5.]
-        car3 = ast.initialize_vehicle(world,pos3,new_origin,0.0,'toyota',color,verbose)
-        agent3 = BehaviorAgent(car3,behavior='aggressive')
+
+#        pos3 = [-20.,5.]
+#        car3 = ast.initialize_vehicle(world,pos3,new_origin,0.0,'toyota',color,verbose)
+#        agent3 = BehaviorAgent(car3,behavior='aggressive')
         #dest_wp_3 = spawnpoints[2].location
-        agent3.set_destination(car3.get_location(),dest_wp_1,clean=True)
+#        agent3.set_destination(car3.get_location(),dest_wp_1,clean=True)
 #        print("dest for car 3 is",dest_wp_3)
         #print(car3.get_location())
-        time.sleep(1.0)
+#        time.sleep(1.0)
+
+
         for waypoint in agent._local_planner.waypoints_queue:
             world.debug.draw_string(waypoint[0].transform.location,'o',draw_shadow=False,color=carla.Color(r=255, g=255, b=255), life_time=10.0,persistent_lines=True)
 
@@ -126,9 +128,9 @@ def move_vehicles(world,color,verbose=False):
             control2 = agent2.run_step()
             agent2.vehicle.apply_control(control2)
 
-            agent3.update_information()
-            control3 = agent3.run_step()
-            agent3.vehicle.apply_control(control3)
+#            agent3.update_information()
+#            control3 = agent3.run_step()
+#            agent3.vehicle.apply_control(control3)
         
             if len(agent.get_local_planner().waypoints_queue) < 21:
                 agent.reroute(spawnpoints)
@@ -138,7 +140,7 @@ def move_vehicles(world,color,verbose=False):
         time.sleep(2.0)
         car.destroy()
         car2.destroy()
-        car3.destroy()
+#        car3.destroy()
 
 def main():
     args = parse_arguments()
@@ -147,7 +149,7 @@ def main():
         args.host,
         args.port,
         args.timeout,
-        'Town02'
+        'Town04'
     )
     carla_world = carla_client.get_world()
 
